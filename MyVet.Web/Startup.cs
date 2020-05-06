@@ -6,9 +6,14 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.HttpsPolicy;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using MyVet.Web.Data;
+using MyVet.Web.Data.Entities;
+using MyVet.Web.Helpers;
 
 namespace MyVet.Web
 {
@@ -31,6 +36,34 @@ namespace MyVet.Web
                 options.MinimumSameSitePolicy = SameSiteMode.None;
             });
 
+            // Aqui pongo mis requisitos de Autenticacion
+            services.AddIdentity<User, IdentityRole>(cfg =>
+            {
+                cfg.User.RequireUniqueEmail = true;
+                cfg.Password.RequireDigit = false;
+                cfg.Password.RequiredUniqueChars = 0;
+                cfg.Password.RequireLowercase = false;
+                cfg.Password.RequireNonAlphanumeric = false;
+                cfg.Password.RequireUppercase = false;
+            }).AddEntityFrameworkStores<DataContext>();
+
+
+
+            services.AddDbContext<DataContext>(cfg =>
+            {
+                cfg.UseSqlServer(Configuration.GetConnectionString("DefaultConnection"));
+            });
+
+
+            //Aqui adiciono este servicio para llamar al SeedDB Seeder
+            // AddTransient significa que lo inyectas solamente una vez
+            services.AddTransient<SeedDb>();
+
+            // Aqui Adiciono el UserHelper
+            //AddScoped lo va inyectar todas las veces q yo lo llame, pero crea una nueva instancia
+            // Mientras que AddSingleton lo inyecta una vez pero lo deja permanente en momoria en la ejecucin de vida del proyecto
+            // o sea que siempre voy a tener ese objeto ahi en memoria
+            services.AddScoped<IUserHelper, UserHelper>();
 
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
         }
@@ -50,6 +83,7 @@ namespace MyVet.Web
 
             app.UseHttpsRedirection();
             app.UseStaticFiles();
+            app.UseAuthentication();
             app.UseCookiePolicy();
 
             app.UseMvc(routes =>
