@@ -27,7 +27,7 @@ namespace MyVet.Web.Data.Entities
         public DateTime DateLocal => Date.ToLocalTime();
 
         // aqui creo la relacion History - ServiceType (1:1)
-        public ServiceType serviceType { get; set; }
+        public ServiceType ServiceType { get; set; }
 
         //Aqui creo la relacion History - Pet (1:1)
         public Pet Pet { get; set; }
